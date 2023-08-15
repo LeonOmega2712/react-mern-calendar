@@ -1,6 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { calendarApi } from '../api';
-import { clearErrorMessage, onChecking, onLogin, onLogout } from '../store';
+import {
+  clearErrorMessage,
+  onChecking,
+  onLogin,
+  onLogout,
+  onLogoutCalendar,
+} from '../store';
+import Swal from 'sweetalert2';
 
 export const useAuthStore = () => {
   const { status, user, errorMessage } = useSelector((state) => state.auth);
@@ -58,17 +65,26 @@ export const useAuthStore = () => {
 
     try {
       const { data } = await calendarApi.get('auth/renew');
-      console.log(data);
+      // console.log(data);
       // localStorage.setItem('token', data.token);
 
       saveNewTokenInLocalStorage(data);
 
       dispatch(onLogin({ name: data.name, uid: data.uid }));
-    } catch (error) {}
+    } catch (error) {
+      localStorage.clear();
+      startLogout();
+      Swal.fire(
+        'Sesión caducada',
+        'Por favor vuelva a iniciar sesión',
+        'error'
+      );
+    }
   };
 
   const startLogout = () => {
     localStorage.clear();
+    dispatch(onLogoutCalendar());
     dispatch(onLogout());
   };
 
